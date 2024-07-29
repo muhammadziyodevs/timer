@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taymer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #timer {
+            font-size: 2.5em;
+            background-color: #333;
+            color: #fff;
+            border: 10px solid #007bff;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            display: none; /* Yashirish */
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            font-size: 1.5em;
+            color: #ffffff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn:active {
+            background-color: #004080;
+        }
+
+        .card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            width: 250px;
+            padding: 15px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            text-align: center;
+            display: none; /* Yashirish */
+        }
+
+        .card audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        input {
+            font-size: 1em;
+            padding: 5px;
+            margin: 5px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+        }
+
+        #startButton {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pamidoro 25+</h1>
+    <input type="number" id="inputMinutes" placeholder="Daqiqalar" min="0" max="59">
+    <input type="number" id="inputSeconds" placeholder="Sekundlar" min="0" max="59">
+    <div id="timer">00:00</div>
+    <div id="buttonContainer" class="button-container">
+        <button class="btn" id="startButton" onclick="startTimer()"><i class="fas fa-play"></i></button>
+        <button class="btn" id="pauseButton" onclick="pauseTimer()" disabled><i class="fas fa-pause"></i></button>
+        <button class="btn" id="resumeButton" onclick="resumeTimer()" disabled><i class="fas fa-play"></i></button>
+        <button class="btn" id="resetButton" onclick="resetTimer()"><i class="fas fa-stop"></i></button>
+    </div>
+    <div class="card">
+        <h2>Budilnik Ovoz</h2>
+        <!-- Budilnik uchun ovoz faylini qo'shish -->
+        <audio id="alarmSound" src="indila.mp3" preload="auto" controls></audio>
+    </div>
+
+    <script>
+        let timer;
+        let minutes = 0;
+        let seconds = 0;
+        let remainingMinutes = 0;
+        let remainingSeconds = 0;
+        let isPaused = false;
+
+        function updateDisplay() {
+            document.getElementById('timer').textContent = 
+                (minutes < 10 ? '0' : '') + minutes + ':' + 
+                (seconds < 10 ? '0' : '') + seconds;
+        }
+
+        function startTimer() {
+            // Vaqtni olish
+            const inputMinutes = parseInt(document.getElementById('inputMinutes').value) || 0;
+            const inputSeconds = parseInt(document.getElementById('inputSeconds').value) || 0;
+            minutes = inputMinutes;
+            seconds = inputSeconds;
+            remainingMinutes = minutes;
+            remainingSeconds = seconds;
+
+            // Taymerni to'xtatamiz
+            if (timer) {
+                clearInterval(timer);
+            }
+
+            // Sanoq oyna va audio kartochkasini yashiramiz
+            document.getElementById('timer').style.display = 'flex';
+            document.querySelector('.card').style.display = 'none';
+
+            // Tugmalar holatini yangilash
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('pauseButton').disabled = false;
+            document.getElementById('resumeButton').disabled = true;
+            document.getElementById('resetButton').disabled = false;
+
+            updateDisplay();
+
+            timer = setInterval(() => {
+                if (seconds === 0 && minutes === 0) {
+                    clearInterval(timer);
+                    playAlarmSound(); // Ovoz chiqarish
+                    return;
+                }
+
+                if (seconds === 0) {
+                    seconds = 59;
+                    minutes--;
+                } else {
+                    seconds--;
+                }
+                updateDisplay();
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timer);
+            isPaused = true;
+
+            // Tugmalar holatini yangilash
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('pauseButton').disabled = true;
+            document.getElementById('resumeButton').disabled = false;
+            document.getElementById('resetButton').disabled = false;
+        }
+
+        function resumeTimer() {
+            if (isPaused) {
+                // Qayta davom ettirish
+                isPaused = false;
+
+                // Tugmalar holatini yangilash
+                document.getElementById('startButton').disabled = true;
+                document.getElementById('pauseButton').disabled = false;
+                document.getElementById('resumeButton').disabled = true;
+                document.getElementById('resetButton').disabled = false;
+
+                timer = setInterval(() => {
+                    if (remainingSeconds === 0 && remainingMinutes === 0) {
+                        clearInterval(timer);
+                        playAlarmSound(); // Ovoz chiqarish
+                        return;
+                    }
+
+                    if (remainingSeconds === 0) {
+                        remainingSeconds = 59;
+                        remainingMinutes--;
+                    } else {
+                        remainingSeconds--;
+                    }
+
+                    minutes = remainingMinutes;
+                    seconds = remainingSeconds;
+                    updateDisplay();
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            minutes = 0;
+            seconds = 0;
+            remainingMinutes = 0;
+            remainingSeconds = 0;
+            isPaused = false;
+
+            // Tugmalar holatini yangilash
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('pauseButton').disabled = true;
+            document.getElementById('resumeButton').disabled = true;
+            document.getElementById('resetButton').disabled = true;
+
+            document.getElementById('timer').style.display = 'none'; // Sanoq oyna yashiriladi
+            document.querySelector('.card').style.display = 'none'; // Audio kartochkasi yashiriladi
+
+            updateDisplay();
+        }
+
+        function playAlarmSound() {
+            const alarmSound = document.getElementById('alarmSound');
+            alarmSound.play().then(() => {
+                setTimeout(() => {
+                    document.getElementById('timer').style.display = 'none'; // Sanoq oyna yashiriladi
+                    document.querySelector('.card').style.display = 'block'; // Audio kartochkasi ko'rsatiladi
+                }, 100); // Ovoz chiqishiga 100 ms kutadi
+            }).catch(error => {
+                console.error('Ovoz chiqarishda xatolik:', error);
+            });
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
